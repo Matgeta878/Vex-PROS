@@ -1,7 +1,7 @@
 #include "main.h"
 // #include "motor.hpp"
 #include "everything.hpp"
-
+// typedef ChassisControllerBuilder ChassisControllerBuilder;
 #define IMU_PORT 10
 
 pros::Motor driveLeftBack(2,pros::E_MOTOR_GEARSET_18,false,pros::E_MOTOR_ENCODER_COUNTS);
@@ -14,12 +14,11 @@ pros::Motor arm(18, MOTOR_GEARSET_18);
 pros::Motor left_roller(20, MOTOR_GEARSET_18);
 pros::Motor right_roller(11, MOTOR_GEARSET_18,false);
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
+okapi::MotorGroup leftSide({2,5});
+okapi::MotorGroup rightSide({-3,-4});
 
-// okapi::TwoEncoderOdometry ok();
-// okapi::Timer daTimer();
-// okapi::Rate daRate;
-// okapi::DefaultOdomChassisController drivetrain(okapi::Logger::getDefaultLogger(), );
-
+// creates the chassis controller that controls the chassis :/ - ALEXIS COMMENTS TM
+auto drive = okapi::ChassisControllerBuilder().withMotors(leftSide, rightSide).withDimensions(AbstractMotor::gearset::green, {{4_in, 11.5_in}, imev5GreenTPR}).build();
 
 
 //Math
@@ -49,50 +48,15 @@ reset() {
   tray.set_zero_position(0);
 }
 
-// void resetIMU(){
-//   imu_sensor.reset();
-// }
-//
-//
-// void turnIMU(double angle){
-//
-//   resetIMU();
-//   double kP = 1;
-//   //double kI = 0;
-//   //double kD = 0;
-//   double error = 0;
-//
-//   while(error > 0){
-//     error = kP*(imu_sensor.get_yaw() - angle);
-//     if(error > 100){
-//        error = 100;
-//     }
-//     else if(error < 20){
-//       error = 20;
-//     }
-//
-//
-//     set_tank(error, -error);
-//     delay(50);
-//   }
-//
-//   set_tank(0, 0);
-//
-//
-//   // imu_sensor.get_heading();
-//   // imu_sensor.get_rotation();
-// }
 
 //Set motors
 void set_tank(int left,int right){
-  driveLeftFront = left;
-  driveLeftBack = left;
-  driveRightFront = right;
-  driveRightBack = right;
-
+  drive->getModel()->tank(left, right);
 }
 //DRIVE CONTROL FUNCTIONS
 void setDriveMotors() {
+
+
   int leftJoystick = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
   int rightJoystick = -controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
   if(abs(leftJoystick) < 10){
@@ -103,6 +67,7 @@ void setDriveMotors() {
   }
   set_tank(leftJoystick,rightJoystick);
 
+  drive->getModel()->tank(leftJoystick, rightJoystick);
 }
 
 void
